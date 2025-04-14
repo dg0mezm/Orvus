@@ -1,3 +1,5 @@
+import os
+import sys
 import json
 from src.Zoni import Zoni
 
@@ -8,6 +10,7 @@ class Orvus():
         self.tcp_scan = {}
         self.udp_scan = {}
 
+        self._setup_work_dir()
         self.scan()
 
 
@@ -79,6 +82,13 @@ class Orvus():
 
         zoni.start()
         return zoni
+
+
+    def _setup_work_dir(self):
+        if not os.path.isdir(self.args.work_dir):
+            os.makedirs(self.args.work_dir, exist_ok=True)
+        
+        os.makedirs(os.path.join(self.args.work_dir, "enum"), exist_ok=True)
 
 
     def _print_msg(self, msg, msg_type, debug):
