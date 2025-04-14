@@ -1,6 +1,8 @@
 import threading
 import subprocess
 import json
+import re
+
 
 class Zoni(threading.Thread):
     def __init__(self, task_json):
@@ -32,15 +34,65 @@ class Zoni(threading.Thread):
 
 
     def _run_scan_tcp_ports(self):
+        result = {}
+        result['port_scan'] = self._discovery_tcp_ports()
+        self._print_msg(f"The TCP Port Scan has finished.", "normal")
+        if len(result['port_scan']['tcp_ports']) > 0:
+            result['service_scan'] = self._enumerate_tcp_services(result['port_scan']['tcp_ports'])
+            self._print_msg(f"The TCP Service Scan has finished.", "normal")
+        else:
+            result['service_scan'] = {}
+        self.task_result = result
+
+
+    def _discovery_tcp_ports(self):
+        result = {}
         target = self.task_data.get("target")
         self._print_msg(f"Scanning TCP ports from {target}", "normal")
-        result = subprocess.run(["nmap", "-sS", "-p-", "-T5", target, "--open", "-Pn"])
+        result_command = subprocess.run(["nmap", "-sS", "-p-", "-T5", target, "--open", "-Pn"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result['output_scan'] = result_command.stdout
+        result['tcp_ports'] = re.findall(r'^(\d+)/tcp\s+open', result_command.stdout, re.MULTILINE)
+        return result
+
+    
+    def _enumerate_tcp_services(self, tcp_ports):
+        result = {}
+        target = self.task_data.get("target")
+        self._print_msg(f"Scanning TCP services from {target}", "normal")
+        result_command = subprocess.run(["nmap", "-sCV", f"-p{",".join(tcp_ports)}", "-A", target, "-Pn"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result['output_scan'] = result_command.stdout
+        return result
 
 
     def _run_scan_udp_ports(self):
+        result = {}
+        result['port_scan'] = self._discovery_udp_ports()
+        self._print_msg(f"The UDP Port Scan has finished.", "normal")
+        if len(result['port_scan']['udp_ports']) > 0:
+            result['service_scan'] = self._enumerate_udp_services(result['port_scan']['udp_ports'])
+            self._print_msg(f"The UDP Service Scan has finished.", "normal")
+        else:
+            result['service_scan'] = {}
+        self.task_result = result
+
+
+    def _discovery_udp_ports(self):
+        result = {}
         target = self.task_data.get("target")
-        self._print_msg(f"Scanning TCP ports from {target}", "normal")
-        result = subprocess.run(["nmap", "-sU", "-T5", target, "--open", "-Pn"])
+        self._print_msg(f"Scanning UDP ports from {target}", "normal")
+        result_command = subprocess.run(["nmap", "-sU", "-p53","-T5", target, "--open", "-Pn"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result['output_scan'] = result_command.stdout
+        result['udp_ports'] = re.findall(r'^(\d+)/udp\s+open', result_command.stdout, re.MULTILINE)
+        return result
+
+    
+    def _enumerate_udp_services(self, udp_ports):
+        result = {}
+        target = self.task_data.get("target")
+        self._print_msg(f"Scanning UDP services from {target}", "normal")
+        result_command = subprocess.run(["nmap", "-sCV", "-sU", f"-p{",".join(udp_ports)}", "-A", target, "-Pn"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result['output_scan'] = result_command.stdout
+        return result
 
 
     def _print_msg(self, msg, msg_type):

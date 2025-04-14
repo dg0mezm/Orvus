@@ -5,8 +5,8 @@ class Orvus():
     def __init__(self, args):
         self.args = args
         self.ping_conectivity = False
-        self.tcp_ports = []
-        self.udp_ports = []
+        self.tcp_scan = {}
+        self.udp_scan = {}
 
         self.scan()
 
@@ -41,28 +41,44 @@ class Orvus():
         self.ping_conectivity = zoni.get_task_result()
         return self.ping_conectivity
 
+
     def _scan_ports(self):
-        task_tcp_ports = json.dumps({
+        self._print_msg(f"Started the Port and Service Scan from {self.args.ip}", "normal", self.args.debug)
+        zoni_tcp = self._scan_tcp_ports()
+        zoni_udp = self._scan_udp_ports()
+
+        zoni_tcp.join()
+        zoni_udp.join()
+
+        self.tcp_scan = zoni_tcp.task_result
+        self.udp_scan = zoni_udp.task_result
+        self._print_msg(f"The Port and Service Scan has finished.", "normal", self.args.debug)
+
+
+    def _scan_tcp_ports(self):
+        task_scan_tcp_ports = json.dumps({
             "task": "scan_tcp_ports",
             "data": {
                 "target": self.args.ip
             }
         })
-        zoni_tcp_ports = Zoni(task_tcp_ports)
+        zoni = Zoni(task_scan_tcp_ports)
+
+        zoni.start()
+        return zoni
 
 
-        task_udp_ports = json.dumps({
+    def _scan_udp_ports(self):
+        task_scan_udp_ports = json.dumps({
             "task": "scan_udp_ports",
             "data": {
                 "target": self.args.ip
             }
         })
-        zoni_udp_ports = Zoni(task_udp_ports)
+        zoni = Zoni(task_scan_udp_ports)
 
-        zoni_tcp_ports.start()
-        zoni_udp_ports.start()
-        zoni_tcp_ports.join()
-        zoni_udp_ports.join()
+        zoni.start()
+        return zoni
 
 
     def _print_msg(self, msg, msg_type, debug):
