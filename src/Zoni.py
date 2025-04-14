@@ -80,7 +80,7 @@ class Zoni(threading.Thread):
         result = {}
         target = self.task_data.get("target")
         self._print_msg(f"Scanning UDP ports from {target}", "normal")
-        result_command = subprocess.run(["nmap", "-sU", "-p53","-T5", target, "--open", "-Pn"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result_command = subprocess.run(["nmap", "-sU","-T5", target, "--open", "-Pn"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         result['output_scan'] = result_command.stdout
         result['udp_ports'] = re.findall(r'^(\d+)/udp\s+open', result_command.stdout, re.MULTILINE)
         return result
