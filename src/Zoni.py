@@ -11,6 +11,8 @@ class Zoni(threading.Thread):
         self.task_result = None
         self.task_map = {
             "ping": self._run_ping,
+            "scan_tcp_ports": self._run_scan_tcp_ports,
+            "scan_udp_ports": self._run_scan_udp_ports,
         }
 
 
@@ -27,7 +29,19 @@ class Zoni(threading.Thread):
         self._print_msg(f"Checking conectivity to {target}...", "normal")
         result = subprocess.run(["ping", "-c", "1", "-W", "1", target], stdout=subprocess.DEVNULL)
         self.task_result = result.returncode == 0
-    
+
+
+    def _run_scan_tcp_ports(self):
+        target = self.task_data.get("target")
+        self._print_msg(f"Scanning TCP ports from {target}", "normal")
+        result = subprocess.run(["nmap", "-sS", "-p-", "-T5", target, "--open", "-Pn"])
+
+
+    def _run_scan_udp_ports(self):
+        target = self.task_data.get("target")
+        self._print_msg(f"Scanning TCP ports from {target}", "normal")
+        result = subprocess.run(["nmap", "-sU", "-T5", target, "--open", "-Pn"])
+
 
     def _print_msg(self, msg, msg_type):
         if msg_type == "normal":
