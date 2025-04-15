@@ -15,6 +15,8 @@ class Zoni(threading.Thread):
             "ping": self._run_ping,
             "scan_tcp_ports": self._run_scan_tcp_ports,
             "scan_udp_ports": self._run_scan_udp_ports,
+            "nmap_tcp_service": self._run_nmap_tcp_service,
+            "nmap_udp_service": self._run_nmap_udp_service,
         }
 
 
@@ -94,6 +96,26 @@ class Zoni(threading.Thread):
         result['output_scan'] = result_command.stdout
         return result
 
+
+    def _run_nmap_tcp_service(self):
+        target = self.task_data.get("target")
+        port = self.task_data.get("port")
+        result = {f"service_port_{port}": {}}
+        self._print_msg(f"Scanning TCP service from port {port}.", "normal")
+        result_command = subprocess.run(["nmap", "-sCV", f"-p{port}", "-A", target, "-Pn"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result[f"service_port_{port}"]['nmap'] = result_command.stdout
+        self.task_result = result
+
+
+    def _run_nmap_udp_service(self):
+        target = self.task_data.get("target")
+        port = self.task_data.get("port")
+        result = {f"service_port_{port}": {}}
+        self._print_msg(f"Scanning TCP service from port {port}.", "normal")
+        result_command = subprocess.run(["nmap", "-sCV", "-sU", f"-p{port}", "-A", target, "-Pn"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result[f"service_port_{port}"]['nmap'] = result_command.stdout
+        self.task_result = result
+    
 
     def _print_msg(self, msg, msg_type):
         if msg_type == "normal":

@@ -9,6 +9,7 @@ class Orvus():
         self.ping_conectivity = False
         self.tcp_scan = {}
         self.udp_scan = {}
+        self.services = {}
 
         self._setup_work_dir()
         self.scan()
@@ -16,6 +17,7 @@ class Orvus():
 
     def scan(self):
         self._initial_scan()
+        self._nmap_services()
 
 
     def _initial_scan(self):
@@ -85,6 +87,65 @@ class Orvus():
         return zoni
 
 
+    def _nmap_services(self):
+        self._nmap_tcp_services()
+        self._nmap_udp_services()
+
+        print(self.services)
+
+
+    def _nmap_tcp_services(self):
+        result = []
+        zonis_service_scanner = []
+        tcp_ports = self.tcp_scan['port_scan']['tcp_ports']
+        for port in tcp_ports:
+            task_nmap_tcp_service = json.dumps({
+                "task": "nmap_tcp_service",
+                "data": {
+                    "target": self.args.ip,
+                    "port": port
+                }
+            })
+            zoni = Zoni(task_nmap_tcp_service)
+
+            zoni.start()
+            zonis_service_scanner.append(zoni)
+
+        for zoni in zonis_service_scanner:
+            zoni.join()
+
+        for zoni in zonis_service_scanner:
+            result.append(zoni.get_task_result())
+
+        self.services['tcp'] = result
+
+
+    def _nmap_udp_services(self):
+        result = []
+        zonis_service_scanner = []
+        udp_ports = self.udp_scan['port_scan']['udp_ports']
+        for port in udp_ports:
+            task_nmap_udp_service = json.dumps({
+                "task": "nmap_udp_service",
+                "data": {
+                    "target": self.args.ip,
+                    "port": port
+                }
+            })
+            zoni = Zoni(task_nmap_udp_service)
+
+            zoni.start()
+            zonis_service_scanner.append(zoni)
+
+        for zoni in zonis_service_scanner:
+            zoni.join()
+
+        for zoni in zonis_service_scanner:
+            result.append(zoni.get_task_result())
+
+        self.services['udp'] = result
+    
+
     def _save_initial_scan_into_files(self):
         enum_dir = os.path.join(self.args.work_dir, "enum")
 
@@ -106,6 +167,7 @@ class Orvus():
             output_file = os.path.join(enum_dir, "nmap_udp_services.txt")
             with open(output_file, 'w') as file:
                 file.write(self.udp_scan['service_scan']['output_scan'])
+
 
     def _setup_work_dir(self):
         if not os.path.isdir(self.args.work_dir):
