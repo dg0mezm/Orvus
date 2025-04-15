@@ -26,6 +26,7 @@ class Orvus():
                 self._print_msg(f"{self.args.ip} is active.", "normal", self.args.debug)
 
             self._scan_ports()
+            self._save_initial_scan_into_files()
         else:
             self._print_msg(f"{self.args.ip} not responding to ping.", "wrong", self.args.debug)
 
@@ -84,10 +85,31 @@ class Orvus():
         return zoni
 
 
+    def _save_initial_scan_into_files(self):
+        enum_dir = os.path.join(self.args.work_dir, "enum")
+
+        output_file = os.path.join(enum_dir, "nmap_tcp_ports.txt")
+        with open(output_file, 'w') as file:
+            file.write(self.tcp_scan['port_scan']['output_scan'])
+        
+        if 'output_scan' in self.tcp_scan['service_scan']:
+            output_file = os.path.join(enum_dir, "nmap_tcp_services.txt")
+            with open(output_file, 'w') as file:
+                file.write(self.tcp_scan['service_scan']['output_scan'])
+       
+
+        output_file = os.path.join(enum_dir, "nmap_udp_ports.txt")
+        with open(output_file, 'w') as file:
+            file.write(self.udp_scan['port_scan']['output_scan'])
+
+        if 'output_scan' in self.udp_scan['service_scan']:
+            output_file = os.path.join(enum_dir, "nmap_udp_services.txt")
+            with open(output_file, 'w') as file:
+                file.write(self.udp_scan['service_scan']['output_scan'])
+
     def _setup_work_dir(self):
         if not os.path.isdir(self.args.work_dir):
             os.makedirs(self.args.work_dir, exist_ok=True)
-        
         os.makedirs(os.path.join(self.args.work_dir, "enum"), exist_ok=True)
 
 
