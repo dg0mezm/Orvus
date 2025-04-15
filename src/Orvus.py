@@ -173,13 +173,17 @@ class Orvus():
 
         for tcp_service in self.services['tcp']:
             for key in tcp_service:
-                output_file = os.path.join(enum_dir, f"{key}_tcp.txt")
+                service_directory = os.path.join(enum_dir, f"{key}_tcp")
+                os.makedirs(service_directory, exist_ok=True)
+                output_file = os.path.join(service_directory, f"nmap_{key}.txt")
                 with open(output_file, 'w') as file:
                     file.write(tcp_service[f'{key}']['nmap'])
 
         for udp_service in self.services['udp']:
             for key in udp_service:
-                output_file = os.path.join(enum_dir, f"{key}_udp.txt")
+                service_directory = os.path.join(enum_dir, f"{key}_udp")
+                os.makedirs(service_directory, exist_ok=True)
+                output_file = os.path.join(service_directory, f"nmap_{key}.txt")
                 with open(output_file, 'w') as file:
                     file.write(udp_service[f'{key}']['nmap'])
 
