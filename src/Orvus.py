@@ -91,8 +91,6 @@ class Orvus():
         self._nmap_tcp_services()
         self._nmap_udp_services()
 
-        print(self.services)
-
 
     def _nmap_tcp_services(self):
         result = []
