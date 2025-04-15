@@ -90,6 +90,7 @@ class Orvus():
     def _nmap_services(self):
         self._nmap_tcp_services()
         self._nmap_udp_services()
+        self._save_nmap_scan_into_files()
 
 
     def _nmap_tcp_services(self):
@@ -165,6 +166,22 @@ class Orvus():
             output_file = os.path.join(enum_dir, "nmap_udp_services.txt")
             with open(output_file, 'w') as file:
                 file.write(self.udp_scan['service_scan']['output_scan'])
+
+
+    def _save_nmap_scan_into_files(self):
+        enum_dir = os.path.join(self.args.work_dir, "enum")
+
+        for tcp_service in self.services['tcp']:
+            for key in tcp_service:
+                output_file = os.path.join(enum_dir, f"{key}_tcp.txt")
+                with open(output_file, 'w') as file:
+                    file.write(tcp_service[f'{key}']['nmap'])
+
+        for udp_service in self.services['udp']:
+            for key in udp_service:
+                output_file = os.path.join(enum_dir, f"{key}_udp.txt")
+                with open(output_file, 'w') as file:
+                    file.write(udp_service[f'{key}']['nmap'])
 
 
     def _setup_work_dir(self):
